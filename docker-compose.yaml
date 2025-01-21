@@ -1,0 +1,32 @@
+services:
+  spring-boot-app:
+    container_name: demo-spring-boot-app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 8080:8080
+    depends_on:
+      - db-test
+    networks:
+      - demo-network
+
+  db-test:
+    container_name: demo-spring-boot
+    image: mysql:latest
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_USER: demo
+      MYSQL_ROOT_PASSWORD: demo
+      MYSQL_PASSWORD: demo
+      MYSQL_DATABASE: test
+    volumes:
+      - ./mysql-data:/var/lib/mysql
+      - ./scripts:/docker-entrypoint-initdb.d
+    networks:
+      - demo-network
+
+networks:
+  demo-network:
+    driver: bridge
