@@ -3,17 +3,26 @@ package com.example.demo.product;
 import com.example.demo.entity.Product;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Optional;
 
 @RestController
 @RequestMapping(path = "api/v1/product")
 public class ProductController {
+
+    private static final String UPLOAD_DIR = "src/web/images/";
 
     @Autowired
     private ProductService productService;
@@ -35,8 +44,43 @@ public class ProductController {
     }
 
     @PostMapping
-    private Product save(@RequestBody Product product) {
+    private Product save(
+            @RequestParam("name") String name,
+            @RequestParam("description") String description,
+            @RequestParam("price") int price,
+            @RequestParam("status") boolean status,
+            @RequestPart("file") MultipartFile file
+    ) {
         validRole();
+
+        Product product = new Product();
+        product.setName(name);
+        product.setDescription(description);
+        product.setPrice(price);
+        product.setStatus(status);
+
+        if (!file.isEmpty()) {
+            String fileName = System.currentTimeMillis() + "-" + file.getOriginalFilename();
+            File dir = new File(UPLOAD_DIR+fileName);
+
+            if(dir.exists()){
+                System.out.println("EXIST");
+            }
+
+            Path path = Path.of(UPLOAD_DIR+fileName);
+
+            try{
+                Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
+                System.out.println("CREATED");
+
+                System.out.println(path.toString());
+                product.setUrlImage(path.toString());
+            } catch (Exception e){
+                System.out.println("Error");
+                System.out.println(e.getMessage());
+            }
+        }
+
         return productService.saveOrUpdate(product);
     }
 

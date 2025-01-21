@@ -1,15 +1,5 @@
 services:
-  spring-boot-app:
-    container_name: demo-spring-boot-app
-    build:
-      context: .
-      dockerfile: Dockerfile
-    ports:
-      - 8080:8080
-    depends_on:
-      - db-test
-    networks:
-      - demo-network
+
 
   db-test:
     container_name: demo-spring-boot
