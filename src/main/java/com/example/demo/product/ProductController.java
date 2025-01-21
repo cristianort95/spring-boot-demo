@@ -2,7 +2,10 @@ package com.example.demo.product;
 
 import com.example.demo.entity.Product;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -74,7 +77,7 @@ public class ProductController {
                 System.out.println("CREATED");
 
                 System.out.println(path.toString());
-                product.setUrlImage(path.toString());
+                product.setUrlImage(fileName);
             } catch (Exception e){
                 System.out.println("Error");
                 System.out.println(e.getMessage());
@@ -96,6 +99,31 @@ public class ProductController {
         productService.deleteById(productId);
     }
 
+
+    @GetMapping("/images/{fileName}")
+    public ResponseEntity<Resource> getImage(@PathVariable("fileName") String fileName) {
+        File file = new File(UPLOAD_DIR + fileName);
+
+        if (!file.exists()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Image not found");
+        }
+
+        String mimeType = null;
+        try {
+            mimeType = Files.probeContentType(file.toPath());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        if (mimeType == null) {
+            mimeType = "application/octet-stream";
+        }
+
+        Resource resource = new FileSystemResource(file);
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(mimeType))
+                .body(resource);
+    }
 
     private void validRole() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
